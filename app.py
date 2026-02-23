@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
-from datetime import datetime
-from werkzeug.utils import secure_filename
 import os
 
 app = Flask(name)
@@ -11,32 +9,29 @@ app.secret_key = "projectmate"
 ---------------- DATABASE ----------------
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 ---------------- FOLDERS ----------------
 
 BASE_DIR = os.path.abspath(os.path.dirname(file))
-app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, "static")
 app.config['DELIVERIES_FOLDER'] = os.path.join(BASE_DIR, "deliveries")
 os.makedirs(app.config['DELIVERIES_FOLDER'], exist_ok=True)
 
 ---------------- EMAIL SAFE CONFIG ----------------
 
-Render free hosting lo SMTP crash avoid cheyyadaniki
+Email disabled (Render safe mode)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-
-KEEP EMPTY → EMAIL DISABLED MODE
-
-app.config['MAIL_USERNAME'] = ''
-app.config['MAIL_PASSWORD'] = ''
-app.config['MAIL_DEFAULT_SENDER'] = ''
+app.config['MAIL_USERNAME'] = ""
+app.config['MAIL_PASSWORD'] = ""
+app.config['MAIL_DEFAULT_SENDER'] = ""
 
 mail = Mail(app)
 
----------------- ADMIN ----------------
+---------------- ADMIN LOGIN ----------------
 
 ADMIN_USERNAME = "Rakesh6305"
 ADMIN_PASSWORD = "Rakesh630@"
@@ -45,7 +40,7 @@ ADMIN_PASSWORD = "Rakesh630@"
 
 class User(db.Model):
 id = db.Column(db.Integer, primary_key=True)
-username = db.Column(db.String(100), unique=True)
+username = db.Column(db.String(100))
 email = db.Column(db.String(150))
 password = db.Column(db.String(100))
 
@@ -58,23 +53,21 @@ class Order(db.Model):
 id = db.Column(db.Integer, primary_key=True)
 user_id = db.Column(db.Integer)
 project_id = db.Column(db.Integer)
-status = db.Column(db.String(50), default="Pending Approval")
+status = db.Column(db.String(50), default="Pending")
 payment_status = db.Column(db.String(50), default="Not Paid")
-project_file = db.Column(db.String(300), default="")
+project_file = db.Column(db.String(200), default="")
 
 ---------------- SAFE EMAIL FUNCTION ----------------
 
-def send_update_email(target_email, subject, body):
+def send_update_email(email, subject, body):
 try:
-# EMAIL DISABLED → SKIP
-if not app.config.get("MAIL_USERNAME"):
-print("Email disabled. Skipping email.")
+if not app.config['MAIL_USERNAME']:
+print("Email disabled - skipping")
 return
 
-    msg = Message(subject, recipients=[target_email])
+    msg = Message(subject, recipients=[email])
     msg.body = body
     mail.send(msg)
-    print("Email sent successfully")
 
 except Exception as e:
     print("Email error ignored:", e)
@@ -85,7 +78,7 @@ except Exception as e:
 def home():
 return render_template("index.html")
 
-@app.route("/register", methods=["POST","GET"])
+@app.route("/register", methods=["GET","POST"])
 def register():
 if request.method == "POST":
 user = User(
@@ -95,11 +88,11 @@ password=request.form["password"]
 )
 db.session.add(user)
 db.session.commit()
-flash("Registered successfully")
+flash("Registered Successfully")
 return redirect("/login")
 return render_template("register.html")
 
-@app.route("/login", methods=["POST","GET"])
+@app.route("/login", methods=["GET","POST"])
 def login():
 if request.method == "POST":
 user = User.query.filter_by(
@@ -112,7 +105,7 @@ password=request.form["password"]
         session["username"] = user.username
         return redirect("/dashboard")
 
-    flash("Invalid login")
+    flash("Invalid Login")
 
 return render_template("login.html")
 
@@ -143,12 +136,12 @@ order = Order(user_id=session["user"], project_id=id)
 db.session.add(order)
 db.session.commit()
 
-flash("Order placed!")
+flash("Order Placed Successfully")
 return redirect("/dashboard")
 
 ---------------- ADMIN ----------------
 
-@app.route("/admin_login", methods=["POST","GET"])
+@app.route("/admin_login", methods=["GET","POST"])
 def admin_login():
 if request.method == "POST":
 if request.form["username"] == ADMIN_USERNAME and request.form["password"] == ADMIN_PASSWORD:
@@ -166,16 +159,13 @@ orders = Order.query.all()
 return render_template("admin.html", orders=orders)
 
 @app.route("/approve/"int:id" (int:id)")
-def approve_order(id):
+def approve(id):
 order = Order.query.get(id)
 order.status = "Approved"
 db.session.commit()
 
 user = User.query.get(order.user_id)
-send_update_email(user.email,
-    "Project Approved",
-    "Your project approved. Please proceed payment."
-)
+send_update_email(user.email,"Approved","Your project approved")
 
 return redirect("/admin")
 
@@ -186,15 +176,10 @@ order.payment_status = "Confirmed"
 db.session.commit()
 
 user = User.query.get(order.user_id)
-send_update_email(user.email,
-    "Payment Confirmed",
-    "Payment confirmed successfully."
-)
+send_update_email(user.email,"Payment Confirmed","Payment confirmed")
 
-flash("Payment confirmed")
+flash("Payment Confirmed")
 return redirect("/admin")
-
----------------- DOWNLOAD ----------------
 
 @app.route("/download/"int:id" (int:id)")
 def download(id):
@@ -210,18 +195,18 @@ return send_from_directory(
     as_attachment=True
 )
 
----------------- INIT DATABASE ----------------
+---------------- DATABASE INIT ----------------
 
 with app.app_context():
 db.create_all()
 
 if Project.query.count() == 0:
-    db.session.add(Project(name="Frontend Portfolio Website", price=999))
-    db.session.add(Project(name="React Admin Dashboard", price=1999))
+    db.session.add(Project(name="Frontend Portfolio Website",price=999))
+    db.session.add(Project(name="React Admin Dashboard",price=1999))
     db.session.commit()
 
 ---------------- RUN ----------------
 
 if name == "main":
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
+port = int(os.environ.get("PORT",5000))
+app.run(host="0.0.0.0",port=port)
