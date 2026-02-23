@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Chat - Order #{{ order.id }} - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 650px;">
+    <div class="page-header">
+        <div>
+            <h2 style="font-size: 1.4rem;">💬 Order #{{ order.id }}</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">{{ project.name }} — ₹{{ project.price }}</p>
+        </div>
+        <a href="/dashboard" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+
+    <div class="card chat-box" style="padding: 0; overflow: hidden;">
+        <div class="chat-messages" id="chatMessages">
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="chat-msg {{ 'chat-msg-student' if msg.sender == 'student' else 'chat-msg-admin' }}">
+                    <div class="chat-bubble {{ 'bubble-student' if msg.sender == 'student' else 'bubble-admin' }}">
+                        <div class="chat-sender">{{ 'You' if msg.sender == 'student' else '🛡️ Admin' }}</div>
+                        <div class="chat-text">{{ msg.text }}</div>
+                        <div class="chat-time">{{ msg.timestamp.strftime('%d %b, %I:%M %p') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <h3>No messages yet</h3>
+                    <p>Ask the admin for a project update!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="/send_message/{{ order.id }}" class="chat-input-bar">
+            <input type="text" name="message" placeholder="Ask for project update..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    var el = document.getElementById('chatMessages');
+    el.scrollTop = el.scrollHeight;
+</script>
+{% endblock %}

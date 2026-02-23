@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Admin Dashboard</h2>
+        <a href="/admin_logout" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+
+    {% if orders %}
+        {% for order, user, project in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <strong>Order #{{ order.id }}</strong>
+                    {% if order.status == "Approved" %}
+                        <span class="badge badge-approved">{{ order.status }}</span>
+                    {% elif order.status == "Rejected" %}
+                        <span class="badge badge-rejected">{{ order.status }}</span>
+                    {% else %}
+                        <span class="badge badge-waiting">{{ order.status }}</span>
+                    {% endif %}
+
+                    {% if order.payment_status == "Paid" %}
+                        <span class="badge badge-waiting">💳 Payment Submitted</span>
+                    {% elif order.payment_status == "Confirmed" %}
+                        <span class="badge badge-approved">💳 Payment Confirmed</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="order-details">
+                <p><strong>Student:</strong> {{ user.username }}</p>
+                <p><strong>Project:</strong> {{ project.name }} — ₹{{ project.price }}</p>
+                <p><strong>Total Amount:</strong> ₹{{ project.price }}</p>
+
+                {% if order.payment_status == "Paid" or order.payment_status == "Confirmed" %}
+                <div style="margin-top: 10px; padding: 12px 16px; background: rgba(0, 214, 143, 0.08); border-radius: 8px; border: 1px solid rgba(0, 214, 143, 0.2);">
+                    <p style="font-weight: 700; color: var(--success); margin-bottom: 6px;">💳 Payment Details</p>
+                    <p><strong>Transaction ID:</strong> {{ order.transaction_id }}</p>
+                    <p><strong>Mobile:</strong> {{ order.mobile_number }}</p>
+                    <p><strong>Email:</strong> {{ order.email }}</p>
+                </div>
+                {% endif %}
+
+                {% if order.admin_remark %}
+                <p style="margin-top: 8px; color: var(--text-muted);"><strong>Last Update:</strong> {{ order.admin_remark }}</p>
+                {% endif %}
+            </div>
+
+            <div class="order-actions" style="margin-bottom: 12px;">
+                {% if order.status == "Pending Approval" %}
+                <a href="/approve/{{ order.id }}" class="btn btn-success btn-sm">✓ Approve</a>
+                <a href="/reject/{{ order.id }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                {% endif %}
+
+                {% if order.payment_status == "Paid" %}
+                <a href="/confirm_payment/{{ order.id }}" class="btn btn-success btn-sm">✓ Confirm Payment</a>
+                {% endif %}
+
+                <a href="/admin_chat/{{ order.id }}" class="btn btn-outline btn-sm">
+                    💬 Chat {% if unread.get(order.id, 0) > 0 %}<span class="chat-badge">{{ unread[order.id] }}</span>{% endif %}
+                </a>
+            </div>
+
+            <!-- Send Quick Update to Student -->
+            <form method="POST" action="/update_order/{{ order.id }}" style="display: flex; gap: 10px; align-items: flex-end;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Quick Update</label>
+                    <input type="text" name="remark" placeholder="e.g. Project files sent to your email" required style="width: 100%;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Send</button>
+            </form>
+
+            {% if order.payment_status == "Confirmed" and not order.project_file %}
+            <form method="POST" action="/deliver_order/{{ order.id }}" enctype="multipart/form-data" style="margin-top: 12px; display: flex; gap: 10px; align-items: flex-end;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>📦 Deliver Final Project</label>
+                    <input type="file" name="project_file" required style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+                </div>
+                <button type="submit" class="btn btn-success btn-sm" style="white-space: nowrap;">📤 Deliver</button>
+            </form>
+            {% endif %}
+
+            {% if order.project_file %}
+            <div style="margin-top: 10px; padding: 10px 14px; background: rgba(0, 214, 143, 0.08); border-radius: 8px; border: 1px solid rgba(0, 214, 143, 0.2);">
+                <p style="color: var(--success); font-weight: 700;">📦 Project Delivered: {{ order.project_file }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <h3>No orders yet</h3>
+        <p>Orders from students will appear here.</p>
+    </div>
+    {% endif %}
+
+    <!-- CUSTOM PROJECT REQUESTS -->
+    <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border);">
+        <h2 style="margin-bottom: 20px;">📝 Custom Project Requests</h2>
+
+        {% if custom_projects %}
+            {% for c in custom_projects %}
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <strong>{{ c.title }}</strong>
+                        {% if c.status == "Accepted" %}
+                            <span class="badge badge-approved">{{ c.status }}</span>
+                        {% elif c.status == "Rejected" %}
+                            <span class="badge badge-rejected">{{ c.status }}</span>
+                        {% else %}
+                            <span class="badge badge-waiting">{{ c.status }}</span>
+                        {% endif %}
+
+                        {% if c.payment_status == "Paid" %}
+                            <span class="badge badge-waiting">💳 Payment Submitted</span>
+                        {% elif c.payment_status == "Confirmed" %}
+                            <span class="badge badge-approved">💳 Payment Confirmed</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="order-details">
+                    <p><strong>Problem:</strong> {{ c.problem }}</p>
+                    <p><strong>Objective:</strong> {{ c.objective }}</p>
+                    <p><strong>Outcome:</strong> {{ c.outcome }}</p>
+                    {% if c.price > 0 %}
+                    <p><strong>Total Price:</strong> ₹{{ c.price }} (Upfront: ₹{{ c.price // 2 }} | Balance: ₹{{ c.price - (c.price // 2) }})</p>
+                    {% endif %}
+
+                    {% if c.payment_status == "Paid" or c.payment_status == "Confirmed" %}
+                    <div style="margin-top: 10px; padding: 12px 16px; background: rgba(0, 214, 143, 0.08); border-radius: 8px; border: 1px solid rgba(0, 214, 143, 0.2);">
+                        <p style="font-weight: 700; color: var(--success); margin-bottom: 6px;">💳 Upfront Payment (50%)</p>
+                        <p><strong>Transaction ID:</strong> {{ c.transaction_id }}</p>
+                        <p><strong>Status:</strong> {{ c.payment_status }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if c.balance_payment_status != "Not Paid" %}
+                    <div style="margin-top: 10px; padding: 12px 16px; background: rgba(0, 112, 243, 0.08); border-radius: 8px; border: 1px solid rgba(0, 112, 243, 0.2);">
+                        <p style="font-weight: 700; color: #0070f3; margin-bottom: 6px;">💳 Balance Payment (50%)</p>
+                        <p><strong>Transaction ID:</strong> {{ c.balance_transaction_id }}</p>
+                        <p><strong>Status:</strong> {{ c.balance_payment_status }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="order-actions">
+                    {% if c.status == "Requested" %}
+                    <form method="POST" action="/accept_custom/{{ c.id }}" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" name="price" placeholder="Set price ₹" required style="width: 130px; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.9rem;">
+                        <button type="submit" class="btn btn-success btn-sm">✓ Accept</button>
+                        <a href="/reject_custom/{{ c.id }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                    </form>
+                    {% endif %}
+
+                    {% if c.payment_status == "Paid" %}
+                    <a href="/confirm_custom_payment/{{ c.id }}" class="btn btn-success btn-sm">✓ Confirm Upfront</a>
+                    {% endif %}
+
+                    {% if c.balance_payment_status == "Paid" %}
+                    <a href="/confirm_custom_payment/{{ c.id }}" class="btn btn-primary btn-sm">✓ Confirm Balance</a>
+                    {% endif %}
+
+                    <a href="/custom_admin_chat/{{ c.id }}" class="btn btn-outline btn-sm">
+                        💬 Chat {% if custom_unread.get(c.id, 0) > 0 %}<span class="chat-badge">{{ custom_unread[c.id] }}</span>{% endif %}
+                    </a>
+                </div>
+
+                <!-- NEW: PROOF OF WORK UPLOAD -->
+                {% if c.payment_status == "Confirmed" and not c.output_file %}
+                <form method="POST" action="/submit_proof/{{ c.id }}" enctype="multipart/form-data" style="margin-top: 16px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; border: 1px dashed var(--border);">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">🎥 Step 1: Upload Proof (Image/Video)</label>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <input type="file" name="proof_file" accept="image/*,video/*" required style="flex: 1; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+                        <button type="submit" class="btn btn-primary btn-sm">📤 Submit Proof</button>
+                    </div>
+                </form>
+                {% endif %}
+
+                {% if c.output_file %}
+                <div style="margin-top: 10px; padding: 10px 14px; background: rgba(0, 112, 243, 0.08); border-radius: 8px; border: 1px solid rgba(0, 112, 243, 0.2);">
+                    <p style="color: #0070f3; font-weight: 700; margin-bottom: 4px;">✅ Proof Uploaded: {{ c.output_file }}</p>
+                    <a href="/static/deliveries/{{ c.output_file }}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 4px 10px;">View Proof</a>
+                </div>
+                {% endif %}
+
+                <!-- FINAL PROJECT ZIP DELIVERY -->
+                {% if c.balance_payment_status == "Confirmed" and not c.project_file %}
+                <form method="POST" action="/deliver_custom/{{ c.id }}" enctype="multipart/form-data" style="margin-top: 16px; padding: 15px; background: rgba(0, 214, 143, 0.05); border-radius: 10px; border: 1px solid rgba(0, 214, 143, 0.2);">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--success);">📦 Step 2: Deliver Final Project Files</label>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <input type="file" name="project_file" required style="flex: 1; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+                        <button type="submit" class="btn btn-success btn-sm">🚀 Final Delivery</button>
+                    </div>
+                </form>
+                {% elif c.output_file and c.balance_payment_status != "Confirmed" %}
+                <div style="margin-top: 12px; padding: 10px 14px; background: rgba(255, 171, 0, 0.1); border-radius: 8px; border: 1px solid rgba(255, 171, 0, 0.3);">
+                    <p style="color: #ffab00; font-size: 0.9rem;">⏳ Final delivery will unlock after the student pays the balance.</p>
+                </div>
+                {% endif %}
+
+                {% if c.project_file %}
+                <div style="margin-top: 10px; padding: 10px 14px; background: rgba(0, 214, 143, 0.08); border-radius: 8px; border: 1px solid rgba(0, 214, 143, 0.2);">
+                    <p style="color: var(--success); font-weight: 700;">🤝 Project Completed & Delivered!</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state" style="padding: 30px;">
+            <p>No custom project requests yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

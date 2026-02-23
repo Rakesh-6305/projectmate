@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ProjectMate{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- 3D Background Layer -->
+    <div class="bg-3d-layer">
+        <div class="grid-3d"></div>
+        <div class="glow-blob blob-1"></div>
+        <div class="glow-blob blob-2"></div>
+        <div class="glow-blob blob-3"></div>
+    </div>
+
+    <nav class="navbar">
+        <a href="/" class="logo">ProjectMate</a>
+        <ul class="nav-links">
+            <li><a href="/projects">Projects</a></li>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/register">Register</a></li>
+            <li><a href="/admin_login">Admin</a></li>
+            {% if session.get('user') %}
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/logout">Logout</a></li>
+            {% endif %}
+            {% if session.get('admin') %}
+            <li><a href="/admin">Admin Panel</a></li>
+            <li><a href="/admin_logout">Admin Logout</a></li>
+            {% endif %}
+            <li><button onclick="toggleChat()" class="btn btn-outline btn-sm" style="margin-left: 10px;">🤖 AI Assistant</button></li>
+        </ul>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="max-width: 700px; margin: 16px auto; padding: 0 20px; position: relative; z-index: 1;">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="main-wrapper" id="mainWrapper">
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+
+        <!-- Chatbot Sidebar -->
+        <div class="chat-sidebar" id="chatSidebar">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">🤖</span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem;">ProjectMate AI</h3>
+                        <span style="font-size: 0.75rem; color: var(--success);">Online Support</span>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="close-chat">&times;</button>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div class="message bot">Hello! I'm your ProjectMate Assistant. How can I help you today?</div>
+            </div>
+            <div id="typingIndicator" class="typing-bubble" style="display: none;">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKey(event)">
+                <button onclick="sendChat()" class="send-chat">🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleChat() {
+            const sidebar = document.getElementById('chatSidebar');
+            const wrapper = document.getElementById('mainWrapper');
+            sidebar.classList.toggle('active');
+            wrapper.classList.toggle('chat-active');
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const chatBody = document.getElementById('chatBody');
+            const msg = input.value.trim();
+            
+            if(!msg) return;
+
+            // Add user message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerText = msg;
+            chatBody.appendChild(userDiv);
+            input.value = '';
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Show typing indicator
+            const typingIndicator = document.getElementById('typingIndicator');
+            typingIndicator.style.display = 'flex';
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            try {
+                const response = await fetch('/chatbot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg})
+                });
+                const data = await response.json();
+                
+                // Hide typing indicator
+                typingIndicator.style.display = 'none';
+
+                const botDiv = document.createElement('div');
+                botDiv.className = 'message bot';
+                botDiv.innerText = data.response;
+                chatBody.appendChild(botDiv);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            } catch (e) {
+                typingIndicator.style.display = 'none';
+                console.error("Chatbot error:", e);
+                const botDiv = document.createElement('div');
+                botDiv.className = 'message bot';
+                botDiv.innerText = "Sorry, I'm having trouble connecting right now.";
+                chatBody.appendChild(botDiv);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        function handleChatKey(e) {
+            if(e.key === 'Enter') sendChat();
+        }
+    </script>
+</body>
+</html>

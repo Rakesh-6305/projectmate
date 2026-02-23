@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Pay Balance - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <h2>Remaining Balance</h2>
+        <div class="price-summary" style="text-align: center; margin-bottom: 24px;">
+            <p style="color: var(--text-muted); margin-bottom: 8px;">For project: <strong>{{ cp.title }}</strong></p>
+            <div class="price">₹{{ balance_price }}</div>
+            <p style="color: var(--success); font-weight: 600;">(Remaining 50%)</p>
+        </div>
+
+        <div class="payment-instructions" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid var(--accent);">
+            <p style="font-size: 0.9rem; line-height: 1.6;">
+                The project files have been delivered for your review. Please pay the remaining balance to complete the order and finalize the delivery.
+            </p>
+            <p style="margin-top: 12px; font-weight: 700; color: var(--text-primary);">UPI: 6305001186@ybl</p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Transaction ID / Reference Number</label>
+                <input name="transaction_id" placeholder="Enter UPI Transaction ID" required>
+            </div>
+            <button class="btn btn-primary form-submit" type="submit">Submit Balance Payment</button>
+        </form>
+        
+        <div class="form-footer">
+            <a href="/dashboard">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

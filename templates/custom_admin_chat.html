@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Admin Chat - {{ cp.title }} - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="page-header">
+        <h2>💬 {{ cp.title }}</h2>
+        <a href="/admin" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+    <p style="color: var(--text-muted); margin-bottom: 16px;">Student: <strong>{{ user.username }}</strong></p>
+
+    <div class="chat-box" style="border: 1px solid var(--border);">
+        <div class="chat-messages" id="chatMessages">
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="chat-msg {{ 'chat-msg-admin' if msg.sender == 'admin' else 'chat-msg-student' }}">
+                    <div class="chat-bubble {{ 'bubble-admin' if msg.sender == 'admin' else 'bubble-student' }}">
+                        <div class="chat-sender">{{ '🛡️ You (Admin)' if msg.sender == 'admin' else '👤 ' + user.username }}</div>
+                        <div class="chat-text">{{ msg.text }}</div>
+                        <div class="chat-time">{{ msg.timestamp.strftime('%d %b, %I:%M %p') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: var(--text-muted); padding: 40px 0;">No messages yet.</p>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="/custom_admin_reply/{{ cp.id }}" class="chat-input-bar">
+            <input type="text" name="message" placeholder="Reply to student..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    var chatBox = document.getElementById('chatMessages');
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}

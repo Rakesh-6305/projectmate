@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Projects - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Available Projects</h2>
+    </div>
+
+    <!-- ================= FRONTEND PROJECTS ================= -->
+    <div class="section-header">
+        <div class="section-icon">💻</div>
+        <div>
+            <h3>Frontend Projects</h3>
+            <p>Modern UI/UX designs, React apps & responsive websites</p>
+        </div>
+    </div>
+        <div class="projects-grid">
+            {% for p in projects %}
+            {% if "Frontend" in p.name %}
+            <div class="card">
+                <span class="card-icon">🎨</span>
+                <h3>{{ p.name.replace('Frontend ', '') }}</h3>
+                <div class="price">₹{{ p.price }}</div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">Full Access after payment</p>
+                <a href="/place_order/{{ p.id }}" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Request Project</a>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    
+        <div style="height: 48px;"></div>
+    
+        <!-- ================= DATA ANALYTICS PROJECTS ================= -->
+        <div class="section-header">
+            <div class="section-icon" style="background: rgba(139, 92, 246, 0.1);">📊</div>
+            <div>
+                <h3>Data Analytics Projects</h3>
+                <p>PowerBI dashboards, Python analysis & ML predictions</p>
+            </div>
+        </div>
+        <div class="projects-grid">
+            {% for p in projects %}
+            {% if "Analytics" in p.name %}
+            <div class="card">
+                <span class="card-icon">📈</span>
+                <h3>{{ p.name.replace('Analytics ', '') }}</h3>
+                <div class="price">₹{{ p.price }}</div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">Full Access after payment</p>
+                <a href="/place_order/{{ p.id }}" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Request Project</a>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Register - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <h2>Create Account</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label>Username</label>
+                <input name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input name="email" type="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input name="password" type="password" placeholder="Enter your password" required>
+            </div>
+            <button class="btn btn-primary form-submit" type="submit">Register</button>
+        </form>
+        <div class="form-footer">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

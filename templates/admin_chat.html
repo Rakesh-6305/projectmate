@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Chat - Order #{{ order.id }} - Admin - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 650px;">
+    <div class="page-header">
+        <div>
+            <h2 style="font-size: 1.4rem;">💬 Order #{{ order.id }}</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Student: {{ user.username }} | {{ project.name }} — ₹{{ project.price }}</p>
+        </div>
+        <a href="/admin" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+
+    <div class="card chat-box" style="padding: 0; overflow: hidden;">
+        <div class="chat-messages" id="chatMessages">
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="chat-msg {{ 'chat-msg-admin' if msg.sender == 'admin' else 'chat-msg-student' }}">
+                    <div class="chat-bubble {{ 'bubble-admin' if msg.sender == 'admin' else 'bubble-student' }}">
+                        <div class="chat-sender">{{ '🛡️ You (Admin)' if msg.sender == 'admin' else '👤 ' + user.username }}</div>
+                        <div class="chat-text">{{ msg.text }}</div>
+                        <div class="chat-time">{{ msg.timestamp.strftime('%d %b, %I:%M %p') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <h3>No messages yet</h3>
+                    <p>Wait for the student to send a message, or reply first.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="/admin_reply/{{ order.id }}" class="chat-input-bar">
+            <input type="text" name="message" placeholder="Reply to student..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    var el = document.getElementById('chatMessages');
+    el.scrollTop = el.scrollHeight;
+</script>
+{% endblock %}

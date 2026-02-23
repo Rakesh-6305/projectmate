@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Custom Project Payment - ProjectMate{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 480px;">
+    <div class="card">
+        <div class="payment-info">
+            <h2>Complete Payment</h2>
+            <div class="project-name">{{ cp.title }}</div>
+            <div class="project-price">₹{{ half_price }}</div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Pay 50% of ₹{{ cp.price }} to get started</p>
+        </div>
+
+        <!-- WARNING -->
+        <div style="margin-bottom: 20px; padding: 14px 16px; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: 10px;">
+            <p style="color: var(--warning); font-weight: 700; margin-bottom: 6px;">⚠️ Important</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Please <strong>contact admin before making payment</strong>. Pay only to the admin's official number. Do not pay to any other number.</p>
+        </div>
+
+        <!-- PAYMENT INFO -->
+        <div style="margin-bottom: 20px; padding: 14px 16px; background: rgba(0, 214, 143, 0.08); border: 1px solid rgba(0, 214, 143, 0.2); border-radius: 10px;">
+            <p style="color: var(--success); font-weight: 700; margin-bottom: 6px;">💳 Pay to this number</p>
+            <p style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary); letter-spacing: 1px;">6305945563</p>
+        </div>
+
+        <!-- CONTACT HELP -->
+        <div style="margin-bottom: 24px; padding: 14px 16px; background: rgba(233, 69, 96, 0.08); border: 1px solid rgba(233, 69, 96, 0.2); border-radius: 10px;">
+            <p style="color: var(--accent-light); font-weight: 700; margin-bottom: 6px;">📞 Contact / Help</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">📧 Email: <strong>rakeshgundebommu@gmail.com</strong></p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">📱 Phone: <strong>+91 9491031780</strong></p>
+        </div>
+
+        <form method="POST" action="/custom_payment/{{ cp.id }}">
+            <div class="form-group">
+                <label>Transaction ID</label>
+                <input name="transaction_id" placeholder="Enter UPI / Bank Transaction ID" required>
+            </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input name="mobile_number" type="tel" placeholder="Enter your mobile number" required>
+            </div>
+            <div class="form-group">
+                <label>Email ID</label>
+                <input name="email" type="email" placeholder="Enter your email address" required>
+            </div>
+            <button class="btn btn-primary form-submit" type="submit">Submit Payment Details</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
