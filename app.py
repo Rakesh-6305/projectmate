@@ -161,7 +161,7 @@ def register():
         username = request.form["username"]
         email = request.form["email"]
         password = request.form["password"]
-        sting = User.query.filter_by(username=username).first()
+        existing = User.query.filter_by(username=username).first()
         if existing:
             flash("Username already exists!", "error")
             return redirect("/register")
@@ -767,27 +767,27 @@ def admin_logout():
     flash("Admin logged out!", "success")
     return redirect("/admin_login")
 
-# ---------- DATABASE CREATE ----------
+# ---------- DATABASE INITIALIZATION ----------
+with app.app_context():
+    db.create_all()
+
+    if Project.query.count() == 0:
+        # FRONTEND PROJECTS
+        db.session.add(Project(name="Frontend Portfolio Website", price=999))
+        db.session.add(Project(name="Frontend E-Learning UI", price=1499))
+        db.session.add(Project(name="Frontend Admin Dashboard React", price=1999))
+        db.session.add(Project(name="Frontend Job Portal UI", price=1499))
+        db.session.add(Project(name="Frontend Food Delivery Website", price=1299))
+
+        # DATA ANALYTICS PROJECTS
+        db.session.add(Project(name="Analytics Sales Dashboard PowerBI", price=1999))
+        db.session.add(Project(name="Analytics Student Performance Analysis", price=1499))
+        db.session.add(Project(name="Analytics Customer Churn Prediction", price=2499))
+        db.session.add(Project(name="Analytics Netflix Data Analysis", price=1499))
+        db.session.add(Project(name="Analytics HR Employee Dashboard", price=1999))
+
+        db.session.commit()
+
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-
-        if Project.query.count() == 0:
-            # FRONTEND PROJECTS
-            db.session.add(Project(name="Frontend Portfolio Website", price=999))
-            db.session.add(Project(name="Frontend E-Learning UI", price=1499))
-            db.session.add(Project(name="Frontend Admin Dashboard React", price=1999))
-            db.session.add(Project(name="Frontend Job Portal UI", price=1499))
-            db.session.add(Project(name="Frontend Food Delivery Website", price=1299))
-
-            # DATA ANALYTICS PROJECTS
-            db.session.add(Project(name="Analytics Sales Dashboard PowerBI", price=1999))
-            db.session.add(Project(name="Analytics Student Performance Analysis", price=1499))
-            db.session.add(Project(name="Analytics Customer Churn Prediction", price=2499))
-            db.session.add(Project(name="Analytics Netflix Data Analysis", price=1499))
-            db.session.add(Project(name="Analytics HR Employee Dashboard", price=1999))
-
-            db.session.commit()
-
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
